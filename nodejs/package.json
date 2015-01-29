@@ -1,0 +1,46 @@
+{
+  "name": "zmq-dojo",
+  "version": "0.0.0",
+  "description": "0MQ Service",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "grunt jshint",
+    "test": "grunt test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pjanuario/zmq-dojo-js.git"
+  },
+  "keywords": [
+    "0MQ",
+    "ZeroMQ"
+  ],
+  "author": {
+    "name": "Pedro Januário",
+    "url": "http://shared-mind.tumblr.com"
+  },
+  "contributors": [],
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/pjanuario/zmq-dojo-js/issues"
+  },
+  "homepage": "https://github.com/pjanuario/zmq-dojo-js",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-jasmine-node-coverage-validation": "0.0.4"
+  },
+  "engines": {
+    "node": ">=0.10.28"
+  },
+  "pre-commit": [
+    "npm test"
+  ],
+  "pre-push": [
+    "npm test"
+  ],
+  "dependencies": {
+    "zmq": "^2.8.0"
+  }
+}

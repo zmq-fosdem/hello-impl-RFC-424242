@@ -1,18 +1,26 @@
 #include <czmq.h>
+#include <unistd.h>
 
 #define request "Hello"
 #define reply "Hello World"
 
 int main (int argc, char** argv)
 {
-    if(argc == 2) printf("Connecting to %s\n", argv[1]);
-    zsock_t *req = zsock_new_req ((argc == 2) ? argv[1] : "tcp://tcp://192.168.43.186:6666:6666");
+    int i;
+    for(i = 1; i<255; i++) {
+        char buff[128];
+        sprintf(buff, "tcp://192.168.1.%d:6666", i);
+        zsock_t *req = zsock_new_req (buff);
+        zsock_set_rcvtimeo(req, 100);
 
-    zstr_send (req, request);
-    char *string = zstr_recv (req);
-    printf("Received '%s'!\n", string);
-    zstr_free (&string);
+        zstr_send (req, request);
+        char *string = zstr_recv (req);
+        if(string != NULL)
+            printf("Received '%s' from 192.168.1.%d!\n", string, i);
 
-    zsock_destroy (&req);
+        zstr_free (&string);
+        zsock_destroy (&req);
+    }
     return 0;
+
 }

@@ -7,7 +7,7 @@
 int main (int argc, char** argv)
 {
     int i;
-    for(i = 1; i<255; i++) {
+    for(i = 1; i<255 && !zsys_interrupted; i++) {
         char buff[128];
         sprintf(buff, "tcp://192.168.1.%d:6666", i);
         zsock_t *req = zsock_new_req (buff);

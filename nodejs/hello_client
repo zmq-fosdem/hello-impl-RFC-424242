@@ -3,12 +3,15 @@
 (function(){
   var zmq = require('zmq');
 
+  var address = process.argv[2];
   var client = zmq.socket('req');
   client.on('message', function(){
     var frames = Array.apply(null, arguments);
     console.log("Client received: %s", frames)
   });
-  client.connect('tcp://127.0.0.1:6666');
+
+  console.log("Connecting to : %s", address);
+  client.connect(address);
 
   console.log("Started client");
   client.send(["Hello"]);

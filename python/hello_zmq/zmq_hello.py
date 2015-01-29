@@ -50,7 +50,7 @@ def _client(opts):
             print('trying to connect to {}:{}'.format(client_addr, port))
 
             dealer_socket = ctx.socket(zmq.DEALER)
-            dealer_socket.setsockopt(zmq.RCVTIMEO, 1000)
+            dealer_socket.setsockopt(zmq.RCVTIMEO, 300)
             endpoint = 'tcp://{}:{}'.format(client_addr, port)
             dealer_socket.connect(endpoint)
 
@@ -91,9 +91,10 @@ def _server(opts):
                 if msg == 'Hello':
                     router_sock.send_multipart([client_id, secret.encode('ascii')])
                 else:
-                    router_sock.send_string([client_id, 'Error'.encode('ascii')])
+                    router_sock.send_multipart([client_id, 'Error'.encode('ascii')])
             except UnicodeDecodeError:
                 log.error('Error decoding', exc_info=True)
+
 
     router_thread = Thread(target=server_hello)
     router_thread.start()

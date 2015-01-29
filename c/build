@@ -1,0 +1,4 @@
+rm -f client server
+
+gcc -o client client.c -lczmq -lzmq
+gcc -o server server.c -lczmq -lzmq

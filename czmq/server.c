@@ -9,9 +9,9 @@ int main (void)
 
     while(!zsys_interrupted) {
         char *string = zstr_recv (rep);
-        if(streq(string,request)) {
-            printf("Got '%s'!\n", request);
+        if(string != NULL && streq(string,request)) {
             zstr_send (rep, reply);
+            printf("Somebody pinged me\n");
         }
         zstr_free (&string);
     }

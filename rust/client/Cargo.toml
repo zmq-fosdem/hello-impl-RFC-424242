@@ -1,0 +1,13 @@
+[package]
+
+name = "client"
+version = "0.0.1"
+authors = ["David Dias <daviddias.p@gmail.com>"]
+
+[[bin]]
+
+name = "client"
+
+[dependencies.zeromq]
+
+git = "https://github.com/zeromq/zmq.rs.git"

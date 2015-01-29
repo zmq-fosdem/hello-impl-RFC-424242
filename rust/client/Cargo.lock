@@ -1,0 +1,12 @@
+[root]
+name = "client"
+version = "0.0.1"
+dependencies = [
+ "zeromq 0.1.0-pre (git+https://github.com/zeromq/zmq.rs.git)",
+]
+
+[[package]]
+name = "zeromq"
+version = "0.1.0-pre"
+source = "git+https://github.com/zeromq/zmq.rs.git#110c701c58ebacbe87fd77f7a515a86b9c804180"
+

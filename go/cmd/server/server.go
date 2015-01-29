@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/zeromq/goczmq"
@@ -29,6 +30,7 @@ func main() {
 
 		if len(msg) == 2 {
 			if string(msg[1]) == "Hello" {
+				fmt.Println("someone said hello")
 				msg[1] = []byte("hello from taotetek")
 			} else {
 				msg[1] = []byte("Error")

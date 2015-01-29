@@ -24,7 +24,7 @@ import zmq
 log = logging.getLogger(__name__)
 
 CLIENT_RECEIVE_TIMEOUT = 300
-CLIENT_HIGH_WATER_MARK = 1000
+CLIENT_HIGH_WATER_MARK = 600
 
 
 def _client(opts):
@@ -46,6 +46,7 @@ def _client(opts):
 
     while True:
         msg = sub_socket.recv_string()
+
         try:
             last_octet, port = msg.split(':')
             last_octet = int(last_octet)
@@ -57,15 +58,16 @@ def _client(opts):
             dealer_socket.setsockopt(zmq.RCVTIMEO, CLIENT_RECEIVE_TIMEOUT)
             endpoint = 'tcp://{}:{}'.format(client_addr, port)
             dealer_socket.connect(endpoint)
+        except ValueError:
+            continue
 
+        try:
             dealer_socket.send_string('Hello')
             reply = dealer_socket.recv_string()
             log.info('{} says {!r}'.format(endpoint, reply))
             dealer_socket.close()
-        except ValueError:
-            pass
         except zmq.Again:
-            log.error('Client unavailable!')
+            log.error('Client {} unavailable!'.format(endpoint))
         except Exception:
             log.error('Eek', exc_info=True)
 
@@ -117,5 +119,6 @@ def main(opts):
         raise ValueError("Unknown top-level command")
 
 if __name__ == '__main__':
-    logging.basicConfig()
+    logging.basicConfig(format='%(asctime)-15s %(message)s', level=logging.INFO)
+
     sys.exit(main(docopt(__doc__)))

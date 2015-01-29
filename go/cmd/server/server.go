@@ -29,12 +29,8 @@ func main() {
 		}
 
 		if len(msg) == 2 {
-			if string(msg[1]) == "Hello" {
-				fmt.Println("someone said hello")
-				msg[1] = []byte("hello from taotetek")
-			} else {
-				msg[1] = []byte("Error")
-			}
+			fmt.Printf("received: %s\n", string(msg[1]))
+			msg[1] = []byte("hello from @taotetek")
 			err = router.SendMessage(msg)
 			if err != nil {
 				log.Errorf("error: %s\n", err)

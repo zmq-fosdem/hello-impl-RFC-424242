@@ -45,7 +45,7 @@ func main() {
 
 		poller, _ := goczmq.NewPoller(dealer)
 		defer poller.Destroy()
-		s := poller.Wait(5000)
+		s := poller.Wait(10000)
 		if s != nil {
 			reply, _, err := s.RecvFrame()
 			if err != nil {
@@ -53,7 +53,7 @@ func main() {
 				continue
 			}
 
-			fmt.Printf("received: %s\n", string(reply))
+			fmt.Printf("YAY!!!!!!!: %s\n", string(reply))
 		}
 		dealer.Destroy()
 	}

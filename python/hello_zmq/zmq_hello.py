@@ -23,6 +23,9 @@ import zmq
 
 log = logging.getLogger(__name__)
 
+CLIENT_RECEIVE_TIMEOUT = 300
+CLIENT_HIGH_WATER_MARK = 600
+
 
 def _client(opts):
     pub_port = int(opts['--pub-port'])
@@ -32,6 +35,7 @@ def _client(opts):
     ctx = zmq.Context()
     sub_socket = ctx.socket(zmq.SUB)
     sub_socket.setsockopt(zmq.SUBSCRIBE, b"")
+    sub_socket.hwm = CLIENT_HIGH_WATER_MARK  # set the high water mark so we don't get bogged down by clients not responding
 
     # connect to all the addrs
     for host in ipaddress.ip_network(network).hosts():
@@ -42,26 +46,28 @@ def _client(opts):
 
     while True:
         msg = sub_socket.recv_string()
+
         try:
             last_octet, port = msg.split(':')
             last_octet = int(last_octet)
             port = int(port)
             client_addr = '{}.{}'.format(network_prefix, last_octet)
-            print('trying to connect to {}:{}'.format(client_addr, port))
+            log.debug('trying to connect to {}:{}'.format(client_addr, port))
 
             dealer_socket = ctx.socket(zmq.DEALER)
-            dealer_socket.setsockopt(zmq.RCVTIMEO, 1000)
+            dealer_socket.setsockopt(zmq.RCVTIMEO, CLIENT_RECEIVE_TIMEOUT)
             endpoint = 'tcp://{}:{}'.format(client_addr, port)
             dealer_socket.connect(endpoint)
+        except ValueError:
+            continue
 
+        try:
             dealer_socket.send_string('Hello')
             reply = dealer_socket.recv_string()
-            print('Got reply {!r} from dealer endpoint {}'.format(reply, endpoint))
+            log.info('{} says {!r}'.format(endpoint, reply))
             dealer_socket.close()
-        except ValueError:
-            pass
         except zmq.Again:
-            log.error('Client unavailable!')
+            log.error('Client {} unavailable!'.format(endpoint))
         except Exception:
             log.error('Eek', exc_info=True)
 
@@ -91,9 +97,10 @@ def _server(opts):
                 if msg == 'Hello':
                     router_sock.send_multipart([client_id, secret.encode('ascii')])
                 else:
-                    router_sock.send_string([client_id, 'Error'.encode('ascii')])
+                    router_sock.send_multipart([client_id, 'Error'.encode('ascii')])
             except UnicodeDecodeError:
                 log.error('Error decoding', exc_info=True)
+
 
     router_thread = Thread(target=server_hello)
     router_thread.start()
@@ -112,5 +119,6 @@ def main(opts):
         raise ValueError("Unknown top-level command")
 
 if __name__ == '__main__':
-    logging.basicConfig()
+    logging.basicConfig(format='%(asctime)-15s %(message)s', level=logging.INFO)
+
     sys.exit(main(docopt(__doc__)))

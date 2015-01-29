@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+(function(){
+  var zmq = require('zmq');
+
+  var service = zmq.socket('rep');
+  service.on('message', function(){
+    var frames = Array.apply(null, arguments);
+    console.log("Service received: %s", frames);
+    if(frames[0].toString()){
+      frames[0] = "Hello World";
+      service.send(frames);
+    }
+  });
+  service.bind('tcp://127.0.0.1:6666');
+
+  var number = 1;
+  var client = zmq.socket('req');
+  client.on('message', function(){
+    var frames = Array.apply(null, arguments);
+    console.log("Client received: %s", frames)
+  });
+  client.connect('tcp://127.0.0.1:6666');
+
+  console.log("Started clients & server");
+  client.send(["Hello"]);
+})();

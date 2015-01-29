@@ -1,0 +1,12 @@
+{
+  "name": "hello-client",
+  "version": "1.0.0",
+  "description": "Node.js 0mq masterclass hello client",
+  "main": "client.js",
+  "dependencies": {
+    "async": "^0.9.0",
+    "zmq": "^2.10.0"
+  },
+  "author": "Luke Bond <luke.n.bond@gmail.com>",
+  "license": "ISC"
+}

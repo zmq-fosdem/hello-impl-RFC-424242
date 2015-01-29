@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+(function(){
+  var zmq = require('zmq');
+
+  var client = zmq.socket('req');
+  client.on('message', function(){
+    var frames = Array.apply(null, arguments);
+    console.log("Client received: %s", frames)
+  });
+  client.connect('tcp://127.0.0.1:6666');
+
+  console.log("Started client");
+  client.send(["Hello"]);
+})();

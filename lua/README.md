@@ -5,6 +5,14 @@
 1. Lua
 2. ZeroMQ
 3. lzmq
+4. 
+
+### Install on OSX
+
+`brew install lua`
+`brew install zeromq`
+`brew install luarocks`
+`luarocks install lzmq`
 
 ## Run
 

@@ -10,7 +10,7 @@ print("Hello World server running")
 while true do
    local buffer = zmq.assert(responder:recv())
    if buffer == "Hello" then
-      responder:send("World")
+      responder:send("Hello World")
    else
       responder:send("Error")
    end

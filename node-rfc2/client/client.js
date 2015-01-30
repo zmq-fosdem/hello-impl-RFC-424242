@@ -1,7 +1,6 @@
 var async = require('async');
 var zmq = require('zmq');
 
-var TOPIC = 'discovery';
 var PUB_PORT = '6665';
 var SUBNET = '192.168.1';
 var IP_LAST_OCTET = '39';
@@ -30,11 +29,9 @@ function connect(host, port, cb) {
   console.log('Trying ' + connstr + '...');
   socket.connect(connstr);
   socket
-    .on('message', function (topic, message) {
+    .on('message', function (message) {
       console.log('Subscription result: ' + message.toString());
-      if (!topic) {
-        console.log('Error: Topic missing!');
-      } else if (!message) {
+      if (!message) {
         console.log('Error: Message missing!');
       } else {
         var serverAddr = message.toString();
@@ -45,11 +42,11 @@ function connect(host, port, cb) {
       return cb(null);
     })
     .on('error', function (err) {
-      console.log('Got error from ' + connstr);
+      console.log('Got error from ' + connstr, err.toString());
       socket.close();
       return cb(err);
     });
-  socket.subscribe(TOPIC);
+  socket.subscribe('');
 }
 
 var addrs = [];

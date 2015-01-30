@@ -31,7 +31,7 @@ var pubSocket = zmq.socket('pub');
 
 function announce() {
   console.log('Broadcasting ' + PUBLISH_STRING);
-  pubSocket.send([TOPIC, PUBLISH_STRING]);
+  pubSocket.send(PUBLISH_STRING);
 }
 
 pubSocket

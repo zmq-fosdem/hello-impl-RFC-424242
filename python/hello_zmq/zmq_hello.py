@@ -4,33 +4,51 @@
 A hello world example using ZMQ
 
 Usage:
-    zmq_hello [options] server <secret> <last_octet>
+    zmq_hello [options] server <secret>
     zmq_hello [options] client
 
 Options:
     -h --help                   Show this help menu
 
     --pub-port=<pub-port>       Port to publish discovery information on [default: 6665]
-    --network=<network>         Network to connect to [default: 192.168.1.0/24]
 """
-import ipaddress
-import logging
-from threading import Thread
-from time import sleep
-from docopt import docopt
 import sys
+import socket
+import logging
 import zmq
+import netifaces
+import ipaddress
+from time import sleep
+from datetime import datetime
+from threading import Thread
+from IPy import IP
+from docopt import docopt
 
 log = logging.getLogger(__name__)
 
 CLIENT_RECEIVE_TIMEOUT = 300
 CLIENT_HIGH_WATER_MARK = 600
 
-
 def _client(opts):
     pub_port = int(opts['--pub-port'])
-    network = opts['--network']
+    ifaces = netifaces.interfaces()
+    networks = list()
+    found_clients = dict()
 
+    def dump_seen_clients():
+        print "\n### Seen Dump ###"
+        for uri, seen in found_clients.items():
+            print "#", uri, seen
+        print "############\n"
+
+    for iface in ifaces:
+        if iface == "lo":
+            continue
+        aux = netifaces.ifaddresses(iface).items()
+        if len(aux) > 1:
+            addr = aux[1][1][0]["addr"]
+            mask = aux[1][1][0]["netmask"]
+            networks.append(IP(addr).make_net(mask))
 
     ctx = zmq.Context()
     sub_socket = ctx.socket(zmq.SUB)
@@ -38,18 +56,22 @@ def _client(opts):
     sub_socket.hwm = CLIENT_HIGH_WATER_MARK  # set the high water mark so we don't get bogged down by clients not responding
 
     # connect to all the addrs
-    for host in ipaddress.ip_network(network).hosts():
-        sub_socket.connect('tcp://{}:{}'.format(host, pub_port))
-
-    # fixme this is a hack
-    network_prefix = '.'.join(ipaddress.ip_network(network).exploded.split('.')[:-1])
+    for network in networks:
+        log.info('publishing to {}'.format(network))
+        for dst_ip in network:
+            sub_socket.connect('tcp://{}:{}'.format(dst_ip, pub_port))
+        
+    network_prefix = '.'.join(socket.gethostbyname(socket.gethostname()).split(".")[:-1])
 
     while True:
         msg = sub_socket.recv_string()
+        uri = network_prefix+"."+msg
+        found_clients[uri] = datetime.now()
+        dump_seen_clients()
 
         try:
             last_octet, port = msg.split(':')
-            last_octet = int(last_octet)
+            lzmast_octet = int(last_octet)
             port = int(port)
             client_addr = '{}.{}'.format(network_prefix, last_octet)
             log.debug('trying to connect to {}:{}'.format(client_addr, port))
@@ -67,16 +89,14 @@ def _client(opts):
             log.info('{} says {!r}'.format(endpoint, reply))
             dealer_socket.close()
         except zmq.Again:
-            log.error('Client {} unavailable!'.format(endpoint))
+            log.debug('Client {} unavailable!'.format(endpoint))
         except Exception:
-            log.error('Eek', exc_info=True)
+            log.debug('Eek', exc_info=True)
 
 
 def _server(opts):
     pub_port = int(opts['--pub-port'])
-
-    # FIXME - get the last octet discovered
-    last_octet = int(opts['<last_octet>'])
+    last_octet = socket.gethostbyname(socket.gethostname()).split(".")[-1]
     secret = opts['<secret>']
 
     # start the pub socket

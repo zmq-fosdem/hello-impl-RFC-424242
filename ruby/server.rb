@@ -16,7 +16,7 @@ hello_server = Thread.new do
 
   while true
     msgs = []
-    socket.recv_strings msgs
+    rc = socket.recv_strings msgs
     sender, payload = msgs
     puts "> #{payload.inspect}"
 
@@ -24,6 +24,8 @@ hello_server = Thread.new do
       answer = "Hello from #{nickname}"
       puts "< #{answer.inspect}"
       rc = socket.send_strings [sender, answer]
+    elsif rc != 0 && ZMQ::Util.errno == ZMQ::EAGAIN
+      puts "Timeout, continue"
     else
       puts "Protocol error: #{payload.inspect}"
       socket.send_string "Error"

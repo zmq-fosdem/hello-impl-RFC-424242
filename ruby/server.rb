@@ -1,4 +1,4 @@
-require 'ffi-rzmq'
+require 'rbczmq'
 require 'socket'
 
 nickname   = ARGV[0] || "@febeling"
@@ -7,28 +7,30 @@ ip         = Socket.ip_address_list.find { |intf| intf.ipv4_private? }
 last_octet = ip.ip_address.split(".").last
 pattern    = /hello/i.freeze
 
+context = ZMQ::Context.new
+
 hello_server = Thread.new do
 
-  context = ZMQ::Context.new
-  socket = context.socket(ZMQ::ROUTER)
-  socket.setsockopt(ZMQ::RCVTIMEO, 30_000)
+  socket = context.socket(:ROUTER)
+  socket.rcvtimeo = 5_000
   socket.bind("tcp://0.0.0.0:#{port}")
 
   while true
     msgs = []
-    rc = socket.recv_strings msgs
-    sender, payload = msgs
-    puts "> #{payload.inspect}"
+    sender = socket.recv
+    payload = socket.recv
+    puts "> #{payload.inspect} (from: #{sender.inspect})"
 
     if pattern.match(payload)
       answer = "Hello from #{nickname}"
       puts "< #{answer.inspect}"
-      rc = socket.send_strings [sender, answer]
-    elsif rc != 0 && ZMQ::Util.errno == ZMQ::EAGAIN
+      socket.sendm sender
+      socket.send answer
+    elsif ZMQ.error
       puts "Timeout, continue"
     else
       puts "Protocol error: #{payload.inspect}"
-      socket.send_string "Error"
+      socket.send "Error"
     end
     sleep 0.1
   end
@@ -38,14 +40,12 @@ end
 discovery_server = Thread.new do
 
   me = "#{last_octet}:#{port}"
-
-  context = ZMQ::Context.new
   socket = context.socket(ZMQ::PUB)
   socket.bind("tcp://*:6665")
 
   while true
     puts "#{Time.now} [discovery] > #{me.inspect}"
-    socket.send_string me
+    socket.send me
     sleep 2
   end
 

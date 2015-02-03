@@ -37,12 +37,12 @@ end
 while true
   msg = socket.recv
 
-  if msg.to_i != -1 && msg.to_s.size > 0
+  if msg
     result = pattern.match(msg.to_s)
     puts "Service discovered: #{msg.inspect}"
     query(context, result[1], result[2]) if result
   else
-    puts "Error msg: #{msg.inspect}"
+    puts "No message"
   end
 
 end

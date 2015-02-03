@@ -3,6 +3,7 @@ require 'rbczmq'
 def query(context, address, port)
 
   dealer = context.socket(:DEALER)
+  dealer.identity = "katzenbus"
   server = "tcp://192.168.1.#{address}:#{port}"
   puts "Query hello server at: #{server}"
 

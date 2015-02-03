@@ -24,7 +24,6 @@ end
 context = ZMQ::Context.new
 socket  = context.socket(:SUB)
 socket.rcvhwm = 20
-socket.rcvtimeo = 5_000
 socket.subscribe ""
 
 pattern = /^(\d{1,3}):(\d{1,5})$/
@@ -42,7 +41,7 @@ while true
     puts "Service discovered: #{msg.inspect}"
     query(context, result[1], result[2]) if result
   else
-    puts "No message"
+    puts "Empty discovery message"
   end
 
 end

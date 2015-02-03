@@ -1,31 +1,30 @@
-require 'ffi-rzmq'
+require 'rbczmq'
 
 def query(context, address, port)
 
-  dealer = context.socket(ZMQ::DEALER)
+  dealer = context.socket(:DEALER)
+  dealer.identity = "katzenbus"
   server = "tcp://192.168.1.#{address}:#{port}"
   puts "Query hello server at: #{server}"
 
-  dealer.setsockopt(ZMQ::RCVTIMEO, 5_000)
-  dealer.setsockopt(ZMQ::SNDTIMEO, 5_000)
+  dealer.rcvtimeo = 5_000
+  dealer.sndtimeo = 5_000
   dealer.connect(server)
 
   message = "Hello"
   puts "#{server} < #{message.inspect}"
-  dealer.send_string message
+  dealer.send(message)
 
-  msg = ""
-  dealer.recv_string(msg)
+  msg = dealer.recv
   puts "#{server} > '#{msg}'"
   dealer.close
 
 end
 
 context = ZMQ::Context.new
-socket  = context.socket(ZMQ::SUB)
-socket.setsockopt(ZMQ::SUBSCRIBE, "")
-socket.setsockopt(ZMQ::RCVHWM, 20)
-socket.setsockopt(ZMQ::RCVTIMEO, 5_000)
+socket  = context.socket(:SUB)
+socket.rcvhwm = 20
+socket.subscribe ""
 
 pattern = /^(\d{1,3}):(\d{1,5})$/
 
@@ -35,15 +34,14 @@ for ip in [9, 25]
 end
 
 while true
-  msg = ''
-  rc = socket.recv_string(msg)
+  msg = socket.recv
 
-  if msg.to_i != -1 && msg.to_s.size > 0
+  if msg
     result = pattern.match(msg.to_s)
     puts "Service discovered: #{msg.inspect}"
     query(context, result[1], result[2]) if result
   else
-    puts "Error msg: #{msg.inspect}"
+    puts "Empty discovery message"
   end
 
 end

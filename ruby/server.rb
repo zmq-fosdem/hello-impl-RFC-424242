@@ -12,7 +12,6 @@ context = ZMQ::Context.new
 hello_server = Thread.new do
 
   socket = context.socket(:ROUTER)
-  socket.rcvtimeo = 5_000
   socket.bind("tcp://0.0.0.0:#{port}")
 
   while true
@@ -26,8 +25,6 @@ hello_server = Thread.new do
       puts "< #{answer.inspect}"
       socket.sendm sender
       socket.send answer
-    elsif ZMQ.error
-      puts "Timeout, continue"
     else
       puts "Protocol error: #{payload.inspect}"
       socket.send "Error"
